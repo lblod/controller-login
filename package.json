@@ -1,0 +1,19 @@
+{
+  "name": "controller-login",
+  "version": "1.0.0",
+  "description": "Mock login like system to provide full access to an admin ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lblod/controller-login.git"
+  },
+  "author": "Nordine Bittich",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lblod/controller-login/issues"
+  },
+  "homepage": "https://github.com/lblod/controller-login#readme"
+}
