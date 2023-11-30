@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/lblod/controller-login/issues"
   },
-  "homepage": "https://github.com/lblod/controller-login#readme"
+  "homepage": "https://github.com/lblod/controller-login#readme",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
 }
