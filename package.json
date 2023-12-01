@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/lblod/controller-login#readme",
   "dependencies": {
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "@lblod/mu-auth-sudo": "^0.6.1"
   }
 }
