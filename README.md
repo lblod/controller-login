@@ -2,7 +2,7 @@
 
 Somewhere between a `mock-login` and an `acmidm-login`.
 
-If you need to expose mock login capabilities while still making sure the authenticated user has some kind of admin role
+If you need to expose mock login capabilities on production while still making sure the authenticated user has some kind of admin role
 to do such operation.
 
 ### Usage:
@@ -23,6 +23,7 @@ controle-login-proxied:
   image: lblod/controller-login
   environment:
     ACM_IDM_LOGIN_ENDPOINT: "http://controle-login"
+    CONTROLLER_ROLE: "Admin" # role to check before allowing switching account
   links:
     - db:database
 ```
