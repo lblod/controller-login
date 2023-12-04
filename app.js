@@ -1,11 +1,11 @@
 import { app } from "mu";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
 
 import {
   check,
   checkNotNull,
   selectAccount,
+  selectCurrentSession,
   selectGroup,
   selectRoles,
   selectAccountBySession,
@@ -15,9 +15,6 @@ import {
 
 const HEADER_MU_SESSION_ID = "mu-session-id";
 const HEADER_X_REWRITE_URL = "x-rewrite-url";
-const ACM_IDM_LOGIN_ENDPOINT =
-  process.env.ACM_IDM_LOGIN_ENDPOINT || "http://login";
-
 const CONTROLLER_ROLE = process.env.CONTROLLER_ROLE || "ControllerWOP";
 
 app.use(
@@ -42,18 +39,15 @@ app.delete("/sessions/current", async function(req, res, next) {
   }
 });
 
-// todo just copy paste the code to do it here instead of calling the acm idm service
 app.get("/sessions/current", async function(req, res, next) {
   try {
+    const sessionUri = req.get(HEADER_MU_SESSION_ID);
+    checkNotNull(sessionUri, "sessionUri missing");
     const currentSession = await getCurrentSession(
       req.get(HEADER_MU_SESSION_ID),
     );
-    if (currentSession.status !== 200) {
-      console.log("not logged in.");
-      return res.header("mu-auth-allowed-groups", "CLEAR").redirect("/logout");
-    } else {
-      return res.status(200).send(currentSession.body);
-    }
+
+    return res.status(200).send(currentSession);
   } catch (e) {
     return next(e);
   }
@@ -69,11 +63,8 @@ app.post("/sessions", async function(req, res, next) {
     const currentSession = await getCurrentSession(
       req.get(HEADER_MU_SESSION_ID),
     );
-    if (currentSession.status !== 200) {
-      console.log("not logged in.");
-      return res.header("mu-auth-allowed-groups", "CLEAR").redirect("/logout");
-    }
-    const roles = currentSession?.body?.data?.attributes?.roles;
+
+    const roles = currentSession?.data?.attributes?.roles;
 
     if (roles.includes(CONTROLLER_ROLE)) {
       const data = req.body.data;
@@ -138,24 +129,33 @@ app.post("/sessions", async function(req, res, next) {
   }
 });
 
-async function getCurrentSession(sessionId) {
-  const currentSessionResponse = await fetch(
-    ACM_IDM_LOGIN_ENDPOINT + "/sessions/current",
-    {
-      method: "get",
-      headers: {
-        "mu-session-id": sessionId,
+async function getCurrentSession(sessionUri) {
+  const { accountUri, accountId } = await selectAccountBySession(sessionUri);
+
+  if (!accountUri) throw "Invalid session";
+  const { sessionId, groupId, roles } = await selectCurrentSession(accountUri);
+  return {
+    links: {
+      self: "/sessions/current",
+    },
+    data: {
+      type: "sessions",
+      id: sessionId,
+      attributes: {
+        roles: roles,
       },
     },
-  );
-  if (currentSessionResponse.status !== 200) {
-    return {
-      status: currentSessionResponse.status,
-      body: currentSessionResponse.statusText,
-    };
-  }
-  const json = await currentSessionResponse.json();
-  return { status: 200, body: json };
+    relationships: {
+      account: {
+        links: { related: `/accounts/${accountId}` },
+        data: { type: "accounts", id: accountId },
+      },
+      group: {
+        links: { related: `/bestuurseenheden/${groupId}` },
+        data: { type: "bestuurseenheden", id: groupId },
+      },
+    },
+  };
 }
 function error(err, _req, res, _next) {
   console.log("error!: ", err);
